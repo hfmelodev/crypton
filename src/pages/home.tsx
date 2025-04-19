@@ -9,9 +9,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { API } from '@/lib/axios'
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, Link as LinkIcon, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router'
 
 interface CryptoData {
   id: string
@@ -83,7 +84,10 @@ export function Home() {
           value={nameCrypton}
           onChange={e => setNameCrypton(e.target.value)}
         />
-        <Button type="submit" className="rounded">
+        <Button
+          type="submit"
+          className="rounded bg-amber-700 hover:bg-amber-600 transition-colors text-white"
+        >
           <Search />
         </Button>
       </form>
@@ -95,40 +99,71 @@ export function Home() {
               <TableRow>
                 <TableHead>Moeda</TableHead>
                 <TableHead>Valor de mercado</TableHead>
-                <TableHead className="text-center">Preço</TableHead>
-                <TableHead className="text-center">Volume</TableHead>
-                <TableHead className="text-center">Variação 24h</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>Volume</TableHead>
+                <TableHead>Variação 24h</TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {cryptoData.map(crypto => (
-                <TableRow key={crypto.id}>
-                  <TableCell className="font-medium">{crypto.name}</TableCell>
-                  <TableCell>${crypto.marketCapUsd}</TableCell>
-                  <TableCell className="text-right">
-                    {Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                    }).format(Number(crypto.priceUsd))}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                    }).format(Number(crypto.volumeUsd24Hr))}
-                  </TableCell>
+              {cryptoData && cryptoData.length > 0 ? (
+                cryptoData.map(crypto => (
+                  <TableRow key={crypto.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        to={`/crypton-details/${crypto.id}`}
+                        className="flex items-center gap-2"
+                      >
+                        <img
+                          src={`https://static.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`}
+                          className="size-5"
+                          alt="Logo da criptomoeda"
+                        />
+                        {crypto.name}
+                        <LinkIcon className="size-3" />
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        notation: 'compact',
+                      }).format(Number(crypto.marketCapUsd))}
+                    </TableCell>
+                    <TableCell>
+                      {Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                      }).format(Number(crypto.priceUsd))}
+                    </TableCell>
+                    <TableCell>
+                      {Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        notation: 'compact',
+                      }).format(Number(crypto.volumeUsd24Hr))}
+                    </TableCell>
+                    <TableCell
+                      className={`${Number(crypto.changePercent24Hr) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                    >
+                      {Intl.NumberFormat('en-US', {
+                        style: 'decimal',
+                        minimumFractionDigits: 2,
+                      }).format(Number(crypto.changePercent24Hr))}
+                      %
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
                   <TableCell
-                    className={`text-right ${Number(crypto.changePercent24Hr) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                    colSpan={5}
+                    className="h-24 text-center whitespace-nowrap text-sm text-muted-foreground/50"
                   >
-                    {Intl.NumberFormat('en-US', {
-                      style: 'decimal',
-                      minimumFractionDigits: 2,
-                    }).format(Number(crypto.changePercent24Hr))}
-                    %
+                    Nenhuma criptomoeda encontrada
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
