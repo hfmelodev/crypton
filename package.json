@@ -1,5 +1,5 @@
 {
-  "name": "vitespark",
+  "name": "crypton",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -22,6 +22,7 @@
     "react-dom": "^19.0.0",
     "react-helmet-async": "^2.0.5",
     "react-router": "^7.1.1",
+    "sonner": "^2.0.3",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7"
   },
