@@ -33,6 +33,27 @@
   }
 }
 
+/* Estiliza toda a scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* Scrollbar horizontal */
+::-webkit-scrollbar:horizontal {
+  height: 4px; /* Altura da scrollbar inferior */
+}
+
+/* Cor da barra deslizante */
+::-webkit-scrollbar-thumb {
+  background: #a89e9e; /* Slate-600 */
+  border-radius: 8px;
+}
+
+/* Quando passar o mouse */
+::-webkit-scrollbar-thumb:hover {
+  background: #5b6068; /* Slate-500 */
+}
+
 @layer base {
   * {
     @apply border-border;
