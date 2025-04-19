@@ -36,23 +36,24 @@ interface CryptoApiResponse {
 export function Home() {
   const [nameCrypton, setNameCrypton] = useState('')
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
-    fetchCryptoData()
+    fetchCryptoData(0)
   }, [])
 
-  async function fetchCryptoData() {
+  async function fetchCryptoData(offset: number) {
     try {
       const { data } = await API.get<CryptoApiResponse>('/', {
         params: {
           limit: 10,
-          offset: 0,
+          offset,
         },
       })
 
       const response = data
 
-      setCryptoData(response.data)
+      setCryptoData(prev => [...prev, ...response.data])
     } catch (err) {
       console.error('Error fetching crypto data:', err)
     }
@@ -67,7 +68,12 @@ export function Home() {
   function handleGetMoreCryptons(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
 
-    console.log('get more cryptons')
+    // Seta o offset para pegar os próximos 10
+    const newOffset = page + 10
+    // Seta o novo offset no state e chama a função
+    setPage(newOffset)
+    // Chama a função para pegar os próximos 10
+    fetchCryptoData(newOffset)
   }
 
   return (
@@ -92,90 +98,170 @@ export function Home() {
         </Button>
       </form>
 
-      <div className="max-w-5xl mx-auto mt-8 overflow-x-auto">
-        <div className="border rounded">
-          <Table>
-            <TableHeader className="border-b bg-muted/40 whitespace-nowrap">
-              <TableRow>
-                <TableHead>Moeda</TableHead>
-                <TableHead>Valor de mercado</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Volume</TableHead>
-                <TableHead>Variação 24h</TableHead>
-              </TableRow>
-            </TableHeader>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        {/* TABELA PARA DESKTOP */}
+        <div className="hidden md:block">
+          <div className="rounded border">
+            <Table className="min-w-full whitespace-nowrap">
+              <TableHeader className="bg-muted/40">
+                <TableRow>
+                  <TableHead className="min-w-48">Moeda</TableHead>
+                  <TableHead>Valor de mercado</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Volume</TableHead>
+                  <TableHead>Variação 24h</TableHead>
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>
-              {cryptoData && cryptoData.length > 0 ? (
-                cryptoData.map(crypto => (
-                  <TableRow key={crypto.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        to={`/crypton-details/${crypto.id}`}
-                        className="flex items-center gap-2"
+              <TableBody>
+                {cryptoData && cryptoData.length > 0 ? (
+                  cryptoData.map(crypto => (
+                    <TableRow key={crypto.id}>
+                      <TableCell className="font-medium">
+                        <Link
+                          to={`/crypton-details/${crypto.id}`}
+                          className="flex items-center gap-2 truncate max-w-[200px]"
+                        >
+                          <img
+                            src={`https://static.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`}
+                            className="size-5 shrink-0"
+                            alt="Logo da criptomoeda"
+                          />
+                          <span className="truncate">{crypto.name}</span>
+                          <LinkIcon className="size-3 shrink-0" />
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                          notation: 'compact',
+                        }).format(Number(crypto.marketCapUsd))}
+                      </TableCell>
+                      <TableCell>
+                        {Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        }).format(Number(crypto.priceUsd))}
+                      </TableCell>
+                      <TableCell>
+                        {Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                          notation: 'compact',
+                        }).format(Number(crypto.volumeUsd24Hr))}
+                      </TableCell>
+                      <TableCell
+                        className={`${
+                          Number(crypto.changePercent24Hr) > 0
+                            ? 'text-emerald-500'
+                            : 'text-rose-500'
+                        }`}
                       >
-                        <img
-                          src={`https://static.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`}
-                          className="size-5"
-                          alt="Logo da criptomoeda"
-                        />
-                        {crypto.name}
-                        <LinkIcon className="size-3" />
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        notation: 'compact',
-                      }).format(Number(crypto.marketCapUsd))}
-                    </TableCell>
-                    <TableCell>
-                      {Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                      }).format(Number(crypto.priceUsd))}
-                    </TableCell>
-                    <TableCell>
-                      {Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        notation: 'compact',
-                      }).format(Number(crypto.volumeUsd24Hr))}
-                    </TableCell>
+                        {Intl.NumberFormat('en-US', {
+                          style: 'decimal',
+                          minimumFractionDigits: 2,
+                        }).format(Number(crypto.changePercent24Hr))}
+                        %
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
                     <TableCell
-                      className={`${Number(crypto.changePercent24Hr) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}
+                      colSpan={5}
+                      className="h-24 text-center text-sm text-muted-foreground/50"
+                    >
+                      Nenhuma criptomoeda encontrada
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* CARDS PARA MOBILE */}
+        <div className="block md:hidden space-y-4">
+          {cryptoData && cryptoData.length > 0 ? (
+            cryptoData.map(crypto => (
+              <div key={crypto.id} className="border rounded p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <img
+                    src={`https://static.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`}
+                    className="size-6"
+                    alt="Logo da criptomoeda"
+                  />
+                  <Link
+                    to={`/crypton-details/${crypto.id}`}
+                    className="font-semibold flex items-center gap-1 text-primary"
+                  >
+                    {crypto.name}
+                    <LinkIcon className="size-3" />
+                  </Link>
+                </div>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <div>
+                    <strong>Valor de mercado: </strong>{' '}
+                    {Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      notation: 'compact',
+                    }).format(Number(crypto.marketCapUsd))}
+                  </div>
+                  <div>
+                    <strong>Preço: </strong>{' '}
+                    {Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                    }).format(Number(crypto.priceUsd))}
+                  </div>
+                  <div>
+                    <strong>Volume: </strong>{' '}
+                    {Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      notation: 'compact',
+                    }).format(Number(crypto.volumeUsd24Hr))}
+                  </div>
+                  <div>
+                    <strong>Variação 24h: </strong>{' '}
+                    <span
+                      className={`${
+                        Number(crypto.changePercent24Hr) > 0
+                          ? 'text-emerald-500'
+                          : 'text-rose-500'
+                      }`}
                     >
                       {Intl.NumberFormat('en-US', {
                         style: 'decimal',
                         minimumFractionDigits: 2,
                       }).format(Number(crypto.changePercent24Hr))}
                       %
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center whitespace-nowrap text-sm text-muted-foreground/50"
-                  >
-                    Nenhuma criptomoeda encontrada
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-sm text-muted-foreground/50 py-8">
+              Nenhuma criptomoeda encontrada
+            </div>
+          )}
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleGetMoreCryptons}
-          className="mt-4 rounded font-semibold"
-        >
-          <span className="mb-1">Carregar mais</span> <ChevronDown />
-        </Button>
+        {/* BOTÃO DE CARREGAR MAIS */}
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGetMoreCryptons}
+            className="my-6 flex items-center gap-2 px-4 py-2 rounded font-semibold"
+          >
+            <span>Carregar mais</span>
+            <ChevronDown className="size-4" />
+          </Button>
+        </div>
       </div>
     </>
   )
