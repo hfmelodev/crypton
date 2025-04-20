@@ -42,13 +42,14 @@ export function Home() {
     try {
       const { data } = await API.get<CryptoApiResponse>('/', {
         params: {
-          limit: 5,
+          limit: 10,
           offset,
         },
       })
 
       const response = data
 
+      // Adiciona os novos dados ao array de criptomoedas
       setCryptoData(prev => [...prev, ...response.data])
     } catch (err) {
       console.error('Erro ao buscar criptomoedas:', err)
@@ -67,7 +68,7 @@ export function Home() {
     e.preventDefault()
 
     // Seta o offset para pegar os próximos 10
-    const newOffset = page + 5
+    const newOffset = page + 10
     // Seta o novo offset no state e chama a função
     setPage(newOffset)
     // Chama a função para pegar os próximos 10
@@ -137,24 +138,28 @@ export function Home() {
                           <LinkIcon className="size-3 shrink-0" />
                         </Link>
                       </TableCell>
+
                       <TableCell>
                         {IntlFormatNumber(
                           Number(crypto.marketCapUsd),
                           'compact'
                         )}
                       </TableCell>
+
                       <TableCell>
                         {Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: 'USD',
                         }).format(Number(crypto.priceUsd))}
                       </TableCell>
+
                       <TableCell>
                         {IntlFormatNumber(
                           Number(crypto.volumeUsd24Hr),
                           'compact'
                         )}
                       </TableCell>
+
                       <TableCell
                         className={`${
                           Number(crypto.changePercent24Hr) > 0
