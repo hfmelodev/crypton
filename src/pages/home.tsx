@@ -12,21 +12,16 @@ import { API } from '@/lib/axios'
 import { ChevronDown, Link as LinkIcon, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
-interface CryptoData {
+export interface CryptoData {
   id: string
-  rank: string
   symbol: string
   name: string
-  supply: string
-  maxSupply: string
   marketCapUsd: string
   volumeUsd24Hr: string
   priceUsd: string
   changePercent24Hr: string
-  vwap24Hr: string
-  explorer: string
 }
 
 interface CryptoApiResponse {
@@ -37,6 +32,7 @@ export function Home() {
   const [nameCrypton, setNameCrypton] = useState('')
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([])
   const [page, setPage] = useState(0)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchCryptoData(0)
@@ -46,7 +42,7 @@ export function Home() {
     try {
       const { data } = await API.get<CryptoApiResponse>('/', {
         params: {
-          limit: 10,
+          limit: 5,
           offset,
         },
       })
@@ -55,25 +51,35 @@ export function Home() {
 
       setCryptoData(prev => [...prev, ...response.data])
     } catch (err) {
-      console.error('Error fetching crypto data:', err)
+      console.error('Erro ao buscar criptomoedas:', err)
     }
   }
 
   function handleSearchCrypto(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    console.log(nameCrypton)
+    if (nameCrypton === '') return
+
+    navigate(`/crypton-details/${nameCrypton}`)
   }
 
   function handleGetMoreCryptons(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault()
 
     // Seta o offset para pegar os próximos 10
-    const newOffset = page + 10
+    const newOffset = page + 5
     // Seta o novo offset no state e chama a função
     setPage(newOffset)
     // Chama a função para pegar os próximos 10
     fetchCryptoData(newOffset)
+  }
+
+  function IntlFormatNumber(value: number, notation: 'compact' | 'standard') {
+    return Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation,
+    }).format(value)
   }
 
   return (
@@ -98,7 +104,7 @@ export function Home() {
         </Button>
       </form>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-5xl mx-auto mt-8">
         {/* TABELA PARA DESKTOP */}
         <div className="hidden md:block">
           <div className="rounded border">
@@ -132,11 +138,10 @@ export function Home() {
                         </Link>
                       </TableCell>
                       <TableCell>
-                        {Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                          notation: 'compact',
-                        }).format(Number(crypto.marketCapUsd))}
+                        {IntlFormatNumber(
+                          Number(crypto.marketCapUsd),
+                          'compact'
+                        )}
                       </TableCell>
                       <TableCell>
                         {Intl.NumberFormat('en-US', {
@@ -145,11 +150,10 @@ export function Home() {
                         }).format(Number(crypto.priceUsd))}
                       </TableCell>
                       <TableCell>
-                        {Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                          notation: 'compact',
-                        }).format(Number(crypto.volumeUsd24Hr))}
+                        {IntlFormatNumber(
+                          Number(crypto.volumeUsd24Hr),
+                          'compact'
+                        )}
                       </TableCell>
                       <TableCell
                         className={`${
@@ -203,11 +207,7 @@ export function Home() {
                 <div className="text-sm text-muted-foreground space-y-1">
                   <div>
                     <strong>Valor de mercado: </strong>{' '}
-                    {Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                      notation: 'compact',
-                    }).format(Number(crypto.marketCapUsd))}
+                    {IntlFormatNumber(Number(crypto.marketCapUsd), 'compact')}
                   </div>
                   <div>
                     <strong>Preço: </strong>{' '}
@@ -218,11 +218,7 @@ export function Home() {
                   </div>
                   <div>
                     <strong>Volume: </strong>{' '}
-                    {Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                      notation: 'compact',
-                    }).format(Number(crypto.volumeUsd24Hr))}
+                    {IntlFormatNumber(Number(crypto.volumeUsd24Hr), 'compact')}
                   </div>
                   <div>
                     <strong>Variação 24h: </strong>{' '}
@@ -244,14 +240,14 @@ export function Home() {
               </div>
             ))
           ) : (
-            <div className="text-center text-sm text-muted-foreground/50 py-8">
+            <div className="text-center rounded border text-sm text-muted-foreground/50 py-8">
               Nenhuma criptomoeda encontrada
             </div>
           )}
         </div>
 
         {/* BOTÃO DE CARREGAR MAIS */}
-        <div className="flex justify-center">
+        <div className="flex justify-center md:justify-start">
           <Button
             type="button"
             variant="outline"
@@ -259,7 +255,7 @@ export function Home() {
             className="my-6 flex items-center gap-2 px-4 py-2 rounded font-semibold"
           >
             <span>Carregar mais</span>
-            <ChevronDown className="size-4" />
+            <ChevronDown className="size-4 mt-1" />
           </Button>
         </div>
       </div>
